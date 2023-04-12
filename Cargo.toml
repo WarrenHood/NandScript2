@@ -1,6 +1,6 @@
 [package]
 name = "nandscript2"
-author = "Warren Hood"
+authors = ["Warren Hood"]
 version = "0.1.0"
 edition = "2021"
 
