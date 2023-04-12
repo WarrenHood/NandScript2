@@ -1,5 +1,6 @@
-use nom::{IResult, sequence::{delimited, tuple}, character::complete::{multispace0, alpha1, digit1, u8}, multi::{fold_many0}, branch::alt, bytes::complete::tag};
+use nom::{IResult, sequence::{delimited, tuple}, character::complete::{multispace0, alpha1, digit1}, multi::{fold_many0, many1}, branch::alt, bytes::complete::tag};
 use crate::ast::*;
+use bitvec::prelude::*;
 
 pub fn parse_word(input: &str) -> IResult<&str, String> {
     let (input, (first, rest)) = delimited(multispace0,
@@ -14,8 +15,21 @@ pub fn parse_var(input: &str) -> IResult<&str, NandScript> {
     Ok((input, NandScript::Variable(varname)))
 }
 
+pub fn parse_binary(input: &str) -> IResult<&str, BitVec> {
+    let (input, result) = many1(alt((tag("0"), tag("1"))))(input)?;
+    let mut bv = BitVec::new();
+    for char in result {
+        bv.push(match char {
+            "0" => false,
+            "1" => true,
+            _ => unreachable!()
+        });
+    }
+    Ok((input, bv))
+}
+
 pub fn parse_literal(input: &str) -> IResult<&str, NandScript> {
-    let (input, val) = delimited(multispace0, u8, multispace0)(input)?;
+    let (input, val) = delimited(multispace0, parse_binary, multispace0)(input)?;
     Ok((input, NandScript::Literal(val)))
 }
 

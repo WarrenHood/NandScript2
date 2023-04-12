@@ -1,4 +1,5 @@
 use std::{collections::HashMap, iter::zip};
+use bitvec::prelude::*;
 
 use crate::ast::NandScript;
 
@@ -31,9 +32,9 @@ impl CPU {
         };
     }
 
-    pub fn run_nandscript(&self, ns: &NandScript, arg_names: Vec<String>, args: Vec<NandScript>) -> u8{
+    pub fn run_nandscript(&self, ns: &NandScript, arg_names: Vec<String>, args: Vec<NandScript>) -> BitVec {
         match ns {
-            NandScript::Literal(x) => *x,
+            NandScript::Literal(x) => x.clone(),
             NandScript::Variable(arg_name) => {
                 for (a_name, a) in zip(arg_names.clone(), args.clone()) {
                     if a_name == *arg_name {
@@ -50,16 +51,27 @@ impl CPU {
         }
     }
 
-    pub fn run_chip(&self, chip_name: &str, args: Vec<u8>) -> u8 {
+    pub fn run_chip(&self, chip_name: &str, args: Vec<BitVec>) -> BitVec {
+        fn pad(bv: &mut BitVec, size: usize) {
+            if size > bv.len() {
+                for _ in 0..(size - bv.len()) {
+                    bv.insert(0, false);
+                }
+            }
+        }
+
         if chip_name == "NAND" {
-            let mut result: u8 = 255;
+            let mut result: BitVec = args.first().expect("Couldn't get first arg").clone();
             for arg in args.iter() {
+                let mut arg = arg.clone();
+                pad(&mut result, arg.len());
+                pad(&mut arg, result.len());
                 result = result & arg;
             }
             return !result;
         }
 
         let chip = self.chips.get(chip_name).expect(&format!("Couldn't find chip definition for chip {}", &chip_name));
-        self.run_nandscript(&chip.logic, chip.args.clone(), args.iter().map(|x| NandScript::Literal(*x)).collect())
+        self.run_nandscript(&chip.logic, chip.args.clone(), args.iter().map(|x| NandScript::Literal(x.clone())).collect())
     }
 }
