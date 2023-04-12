@@ -52,7 +52,7 @@ impl CPU {
 
     pub fn run_chip(&self, chip_name: &str, args: Vec<u8>) -> u8 {
         if chip_name == "NAND" {
-            let mut result: u8 = 1;
+            let mut result: u8 = 255;
             for arg in args.iter() {
                 result = result & arg;
             }

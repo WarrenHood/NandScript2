@@ -19,7 +19,8 @@ fn main() {
                 cpu.load_chip(ns);
             },
             _ => {
-                println!("{}", cpu.run_nandscript(&ns, vec![], vec![]) & 0b00000001);
+                let result = cpu.run_nandscript(&ns, vec![], vec![]);
+                println!("0b{0:08b} | 0x{0:02x} | {0}", &result);
             }
         }
     }
